@@ -1,12 +1,64 @@
-import React from "react";
+import React, { useState } from "react";
+import { saveContactMessage } from "../services/contactService";
 
 export default function Contact() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus(null);
+
+    if (!form.name || !form.email || !form.message) {
+      setStatus({
+        type: "error",
+        message: "Please fill your name, email and message.",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await saveContactMessage(form);
+      setStatus({
+        type: "success",
+        message: "Thanks! Your message has been sent ✅",
+      });
+
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        message: "",
+      });
+    } catch (error) {
+      console.error("Error saving contact message:", error);
+      setStatus({
+        type: "error",
+        message: "Something went wrong. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative flex items-top justify-center min-h-[700px] bg-gradient-to-b from-green-50 to-white sm:items-center sm:pt-0">
       <div className="max-w-6xl mx-auto sm:px-6 lg:px-8">
         <div className="mt-8 overflow-hidden shadow-lg rounded-2xl bg-white">
           <div className="grid grid-cols-1 md:grid-cols-2">
-            {/* Left Section */}
             <div className="p-8 bg-green-100 sm:rounded-l-2xl">
               <h1 className="text-4xl font-extrabold text-green-800">
                 Get in Touch 🌿
@@ -35,7 +87,7 @@ export default function Contact() {
                   />
                 </svg>
                 <span className="ml-4 font-semibold">
-                HQ,Indore Madhya Pradesh
+                  HQ,Indore Madhya Pradesh
                 </span>
               </div>
 
@@ -74,8 +126,10 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* Right Section (Form) */}
-            <form className="p-8 flex flex-col justify-center bg-white">
+            <form
+              className="p-8 flex flex-col justify-center bg-white"
+              onSubmit={handleSubmit}
+            >
               <h2 className="text-2xl font-bold text-green-800 mb-4">
                 Contact Form
               </h2>
@@ -85,6 +139,8 @@ export default function Contact() {
                 name="name"
                 id="name"
                 placeholder="Full Name"
+                value={form.name}
+                onChange={handleChange}
                 className="mt-2 py-3 px-4 rounded-lg bg-gray-50 border border-gray-300 text-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
               />
 
@@ -93,14 +149,18 @@ export default function Contact() {
                 name="email"
                 id="email"
                 placeholder="Email Address"
+                value={form.email}
+                onChange={handleChange}
                 className="mt-4 py-3 px-4 rounded-lg bg-gray-50 border border-gray-300 text-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
               />
 
               <input
                 type="tel"
-                name="tel"
+                name="phone"
                 id="tel"
                 placeholder="Phone Number"
+                value={form.phone}
+                onChange={handleChange}
                 className="mt-4 py-3 px-4 rounded-lg bg-gray-50 border border-gray-300 text-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
               />
 
@@ -109,14 +169,29 @@ export default function Contact() {
                 id="message"
                 placeholder="Your Message..."
                 rows="4"
+                value={form.message}
+                onChange={handleChange}
                 className="mt-4 py-3 px-4 rounded-lg bg-gray-50 border border-gray-300 text-gray-800 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
               ></textarea>
 
+              {status && (
+                <p
+                  className={`mt-4 text-sm ${
+                    status.type === "success"
+                      ? "text-green-700"
+                      : "text-red-600"
+                  }`}
+                >
+                  {status.message}
+                </p>
+              )}
+
               <button
                 type="submit"
-                className="mt-5 w-full md:w-40 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 duration-300"
+                disabled={loading}
+                className="mt-5 w-full md:w-40 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105 duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Send Message
+                {loading ? "Sending..." : "Send Message"}
               </button>
             </form>
           </div>
@@ -125,3 +200,4 @@ export default function Contact() {
     </div>
   );
 }
+

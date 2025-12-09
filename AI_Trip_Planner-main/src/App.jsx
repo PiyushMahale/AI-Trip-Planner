@@ -11,6 +11,7 @@ import PlaceDetails from "./components/PlaceDetails";
 import Login from "./components/Login";
 import SignUp from "./components/SignUp";
 import MyTrips from "./components/MyTrips";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 function App() {
@@ -26,7 +27,7 @@ function App() {
         <Route path="trips" element={<Trips/> } />
         <Route path="results" element={<TripResults />} />
         <Route path="place/:id" element={<PlaceDetails />} />
-        <Route path="my-trips" element={<MyTrips />} />
+        <Route path="/my-trips" element=<ProtectedRoute> {<MyTrips />}</ProtectedRoute> />
       </Route>
     )
   );

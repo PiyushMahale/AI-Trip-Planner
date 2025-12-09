@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../../AuthContext";
-import { firebaseLogout } from "../../firebase/auth";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
-
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -15,16 +13,21 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const pages = ["Discover", "Trips", "Reviews", "Contact", "My Trips"];
+
+  const getPath = (page) => {
+    if (page === "Discover") return "/";
+    return "/" + page.toLowerCase().replace(" ", "-");
+  };
+
   return (
     <header
       className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/90 shadow-md backdrop-blur-md"
-          : "bg-white"
+        scrolled ? "bg-white/90 shadow-md backdrop-blur-md" : "bg-white"
       }`}
     >
       <nav className="h-20 max-w-7xl mx-auto flex justify-between items-center px-4 md:px-10 py-3">
-        {/* ✅ Logo */}
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img
             src="https://www.svgrepo.com/show/494022/travel.svg"
@@ -36,12 +39,12 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* ✅ Desktop Links */}
+        {/* Desktop Links */}
         <div className="hidden lg:flex items-center gap-10">
-          {["Discover", "Trips","Reviews", "Contact"].map((page) => (
+          {pages.map((page) => (
             <NavLink
               key={page}
-              to={page === "Discover" ? "/" : `/${page.toLowerCase()}`}
+              to={getPath(page)}
               className={({ isActive }) =>
                 `relative text-[16px] font-medium transition duration-200 
                 ${
@@ -57,15 +60,15 @@ export default function Header() {
           ))}
         </div>
 
-        {/* ✅ Desktop Buttons */}
+        {/* Desktop Buttons */}
         {isAuthenticated ? (
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-700">
               Hi, {user?.email?.split("@")[0]}
             </span>
-        
+
             <button
-              onClick={() => firebaseLogout()}
+              onClick={logout}
               className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-emerald-50"
             >
               Log out
@@ -79,7 +82,7 @@ export default function Header() {
             >
               Log in
             </Link>
-        
+
             <Link
               to="/sign-up"
               className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
@@ -89,7 +92,7 @@ export default function Header() {
           </div>
         )}
 
-        {/* ✅ Mobile Menu Button */}
+        {/* Mobile Menu Button */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           className="lg:hidden text-gray-700 hover:text-emerald-600 focus:outline-none transition"
@@ -102,7 +105,11 @@ export default function Header() {
               strokeWidth="2"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           ) : (
             <svg
@@ -112,20 +119,24 @@ export default function Header() {
               strokeWidth="2"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           )}
         </button>
       </nav>
 
-      {/* ✅ Mobile Dropdown */}
+      {/* Mobile Dropdown */}
       {menuOpen && (
         <div className="lg:hidden bg-white shadow-md border-t animate-slideDown">
           <div className="flex flex-col items-center py-4 space-y-3">
-            {["Discover", "Trips", "Contact", "My Trips"].map((page) => (
+            {pages.map((page) => (
               <NavLink
                 key={page}
-                to={page === "Discover"? "/": "/" + page.toLowerCase().replace(" ", "-")}
+                to={getPath(page)}
                 onClick={() => setMenuOpen(false)}
                 className={({ isActive }) =>
                   `block w-full text-center py-2 rounded-md text-[15px] ${
@@ -140,11 +151,11 @@ export default function Header() {
             ))}
 
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-2">
                 <span className="text-sm text-gray-700">
                   Hi, {user?.email?.split("@")[0]}
                 </span>
-            
+
                 <button
                   onClick={logout}
                   className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-emerald-50"
@@ -156,23 +167,25 @@ export default function Header() {
               <div className="flex items-center gap-3">
                 <Link
                   to="/login"
+                  onClick={() => setMenuOpen(false)}
                   className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-emerald-50"
                 >
                   Log in
                 </Link>
-            
+
                 <Link
                   to="/sign-up"
+                  onClick={() => setMenuOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
                 >
                   Sign Up
                 </Link>
               </div>
             )}
-
           </div>
         </div>
       )}
     </header>
   );
 }
+

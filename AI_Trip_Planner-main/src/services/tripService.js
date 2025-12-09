@@ -6,57 +6,67 @@ import {
   doc,
   query,
   where,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase/firebase";
 
 const tripsCollection = collection(db, "trips");
 
 /**
- * Save a trip to Firestore
- * @param {Object} tripData - trip information (destination, days, budget, etc.)
- * @param {string|null} userEmail - email of logged-in user (if available)
- * @returns {Promise<string>} - created document id
+ * @param {Object} tripData 
+ * @param {string|null} userEmail 
+ * @returns {Promise<string>} 
  */
 export async function saveTripToDB(tripData, userEmail = null) {
   const payload = {
     ...tripData,
-    userEmail: userEmail || null,
+    userEmail: userEmail ? userEmail.toLowerCase() : null,
     createdAt: new Date().toISOString(),
   };
 
   const docRef = await addDoc(tripsCollection, payload);
-  return docRef.id; // Firestore document ID
+  return docRef.id;
 }
 
 /**
- * Get all trips for a specific user (or all trips if no userEmail passed)
- * @param {string|null} userEmail
+ * @param {string|null} userEmail 
  * @returns {Promise<Array>}
  */
 export async function getTripsForUser(userEmail = null) {
-  let q;
-
-  if (userEmail) {
-    q = query(
-      tripsCollection,
-      where("userEmail", "==", userEmail),
-      orderBy("createdAt", "desc")
-    );
-  } else {
-    // fallback: get all trips ordered by createdAt
-    q = query(tripsCollection, orderBy("createdAt", "desc"));
+  if (!userEmail) {
+    return [];
   }
 
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((docSnap) => ({
-    id: docSnap.id,
-    ...docSnap.data(),
-  }));
+  const lowercasedEmail = userEmail.toLowerCase();
+
+  try {
+    const q = query(tripsCollection, where("userEmail", "==", lowercasedEmail));
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      console.log("No matching trips found in Firestore for email:", lowercasedEmail);
+      return [];
+    }
+
+    const trips = snapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+
+    trips.sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt) : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt) : 0;
+      return dateB - dateA;
+    });
+
+    return trips;
+  } catch (error) {
+    console.error("Error fetching user trips from Firestore:", error);
+    return [];
+  }
 }
 
 /**
- * Get a single trip by its Firestore document ID
  * @param {string} tripId
  * @returns {Promise<Object|null>}
  */
