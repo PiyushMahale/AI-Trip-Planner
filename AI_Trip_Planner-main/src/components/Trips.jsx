@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../AuthContext";
 import { saveTripToDB } from "../services/tripService";
 
@@ -9,6 +9,7 @@ export default function Trip() {
   const [selectedBudget, setSelectedBudget] = useState("");
   const [selectedTravelType, setSelectedTravelType] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const { register, handleSubmit, reset } = useForm();
   const navigate = useNavigate();
@@ -24,6 +25,13 @@ export default function Trip() {
       .then((data) => setCities(data.data))
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    const destination = searchParams.get("destination");
+    if (destination) {
+      reset({ destination: destination });
+    }
+  }, [searchParams, reset, cities]);
 
   useEffect(() => {
     const saved = localStorage.getItem("pendingTripForm");

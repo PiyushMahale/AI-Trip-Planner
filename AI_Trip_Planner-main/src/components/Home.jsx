@@ -1,8 +1,36 @@
-import React from "react";
-
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
+  const [city, setCity] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const navigate = useNavigate();
+
+  // Fetch city suggestions
+  useEffect(() => {
+    if (!city) return;
+    fetch("https://countriesnow.space/api/v0.1/countries/cities", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ country: "India" }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const filtered = data.data.filter((c) =>
+          c.toLowerCase().startsWith(city.toLowerCase())
+        );
+        setSuggestions(filtered.slice(0, 5));
+      })
+      .catch(console.error);
+  }, [city]);
+
+  const handleSearch = (selectedCity) => {
+    const targetCity = selectedCity || city;
+    if (!targetCity) return;
+    navigate(`/trips?destination=${encodeURIComponent(targetCity)}`);
+  };
+
   return (
     <div className="overflow-x-hidden">
       {/* 🌍 Hero Section */}
@@ -16,30 +44,53 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50"></div>
 
         <motion.div
-          className="relative z-10 text-center text-white px-4"
+          className="relative z-10 text-center text-white px-4 w-full max-w-xl"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1 }}
         >
-<h1 className="text-5xl md:text-6xl font-bold mb-4 text-white">
-  Explore Smarter — Let AI Guide Your <span className="text-green-400">Adventure</span>
-</h1>
-
-
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white">
+            Explore Smarter — Let AI Guide Your{" "}
+            <span className="text-green-400">Adventure</span>
+          </h1>
 
           <p className="text-lg md:text-xl mb-6">
             Find the best destinations, hotels, and travel experiences worldwide.
           </p>
 
-          <div className="flex bg-white rounded-full overflow-hidden max-w-xl mx-auto">
-            <input
-              type="text"
-              placeholder="Where to?"
-              className="flex-grow px-5 py-3 text-gray-700 focus:outline-none"
-            />
-            <button className="bg-green-800 text-white px-6 py-3 font-semibold hover:bg-green-700 transition">
-              Search
-            </button>
+          {/* 🔎 Search Bar */}
+          <div className="relative">
+            <div className="flex bg-white rounded-full overflow-hidden shadow-lg max-w-xl mx-auto">
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Where to?"
+                className="flex-grow px-5 py-3 text-gray-700 focus:outline-none rounded-l-full"
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              />
+              <button
+                onClick={() => handleSearch()}
+                className="bg-green-800 text-white px-6 py-3 font-semibold hover:bg-green-700 transition rounded-r-full"
+              >
+                Search
+              </button>
+            </div>
+
+            {/* Autocomplete suggestions */}
+            {suggestions.length > 0 && (
+              <ul className="absolute left-0 right-0 mt-1 text-black bg-white border rounded-lg shadow-md max-h-60 overflow-y-auto z-50">
+                {suggestions.map((c, i) => (
+                  <li
+                    key={i}
+                    className="px-4 py-2 hover:bg-green-100 cursor-pointer"
+                    onClick={() => handleSearch(c)}
+                  >
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </motion.div>
       </section>
